@@ -1,3 +1,7 @@
+from fastapi import FastAPI
 
+app = FastAPI()
 
-print("Probando git rep")
+@app.get('/')
+def message():
+    return"Hola Mundo"
