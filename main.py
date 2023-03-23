@@ -63,16 +63,22 @@ def create_movie(id: int = Body(), tittle: str = Body(), overview: str = Body(),
     )
     return movies
 
-@app.put('/movies', tags=[movies])
-def update_movie(id: int = Body(), tittle: str = Body(), overview: str = Body(), year: int = Body(), rating: float = Body(), category: str = Body()):
-    for i in movies:
-        if i['id'] == id:
-            i.update({
-                'year' : year,
-                'rating' : rating,
-                'category' : category
-            })
-            return i
+@app.put('/movies', tags=['movies'])
+def update_movie(id: int, title: str= Body(), overview: str= Body(), year: str= Body(), rating: float= Body(), category: str = Body()):
+
+    movie = [(idx) for idx, mo in enumerate(movies) if mo['id'] == id]
+
+    if(len(movie) > 0):
+        movies[movie[-1]] = {
+            "id": id,
+            "title": title,
+            "overview": overview,
+            "year": year,
+            "rating": rating,
+            "category": category
+        }
+
+        return movies
 
 @app.delete('/movies', tags=[movies])
 def delete_movie(id: int = Body()):
