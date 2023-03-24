@@ -2,12 +2,17 @@ from typing import List, Optional
 from fastapi import FastAPI, Body, Path, Query
 from fastapi.responses import HTMLResponse, JSONResponse
 from pydantic import BaseModel, Field
+from jwt_manager import create_token
 
 app = FastAPI()
 
 app.title = "Mi aplicacion con FastAPI"
 
 app.version = '1.1.1.1'
+
+class User(BaseModel):
+    email: str
+    password: str
 
 class Movie(BaseModel):
 
@@ -55,23 +60,27 @@ movies = [
 def message():
     return HTMLResponse('<h1>Hello World<h1>')
 
-@app.get('/movies', tags=[movies], response_model= List[Movie], status_code=200)
+@app.post('/login', tags=['auth'])
+def login(user: User):
+    return user
+
+@app.get('/movies', tags=['movies'], response_model= List[Movie], status_code=200)
 def get_movies() -> List[Movie]:
     return JSONResponse(statuscode=200, codecontent=movies)
 
-@app.get('/movies/{id}', tags=[movies], response_model=Movie, status_code=200)
+@app.get('/movies/{id}', tags=['movies'], response_model=Movie, status_code=200)
 def get_movie(id: int = Path(ge=1, le=2000)) -> Movie:
     for i in movies:
         if i['id'] == id:
             return JSONResponse(statuscode=200,content=i)
     return ['No se encuentra su pelicula en la lista']
 
-@app.get('/movies/', tags=[movies], response_model=List[Movie], status_code=200)
+@app.get('/movies/', tags=['movies'], response_model=List[Movie], status_code=200)
 def get_movies_by_category(category: str = Query(min_length=5, max_length=15)) -> Movie:
     data = [ i for i in movies if i ['category'] == category]
     return JSONResponse(statuscode=200,content=[data])
 
-@app.post('/movies', tags=[movies], response_model=dict, status_code=201)
+@app.post('/movies', tags=['movies'], response_model=dict, status_code=201)
 def create_movie(movie: Movie) -> dict:
     movies.append(movie)
     return JSONResponse(status_code=201, content={"message": "Se registro la pelicula"})
@@ -92,7 +101,7 @@ def update_movie(id: int, movie: Movie) -> dict:
         }
         return JSONResponse(status_code=200, content={"message":'Se modifico la pelicula'})
 
-@app.delete('/movies', tags=[movies], response_model=dict, status_code=200)
+@app.delete('/movies', tags=['movies'], response_model=dict, status_code=200)
 def delete_movie(id: int = Body()) -> dict:
     for i in movies:
         if i['id'] == id:
