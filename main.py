@@ -4,12 +4,16 @@ from fastapi.responses import HTMLResponse, JSONResponse
 from pydantic import BaseModel, Field
 from jwt_manager import create_token, validate_token
 from fastapi.security import HTTPBearer
+from config.database import Session, engine, Base
+from models.movie import Movie
 
 app = FastAPI()
 
 app.title = "Mi aplicacion con FastAPI"
 
 app.version = '1.1.1.1'
+
+Base.metadata.create_all(bind= engine)
 
 class JWTBearer(HTTPBearer):
     async def __call__(self, request: Request):
