@@ -5,7 +5,8 @@ from pydantic import BaseModel, Field
 from jwt_manager import create_token, validate_token
 from fastapi.security import HTTPBearer
 from config.database import Session, engine, Base
-from models.movie import Movie
+from models.movie import Movie as MovieModel
+from fastapi.encoders import jsonable_encoder
 
 app = FastAPI()
 
@@ -81,23 +82,33 @@ def login(user: User):
 
 @app.get('/movies', tags=['movies'], response_model= List[Movie], status_code=200, dependencies=[Depends(JWTBearer())])
 def get_movies() -> List[Movie]:
-    return JSONResponse(status_code=200, content=movies)
+    db = Session()
+    result = db.query(MovieModel).all()
+    return JSONResponse(status_code=200, content=jsonable_encoder(result))
 
 @app.get('/movies/{id}', tags=['movies'], response_model=Movie, status_code=200)
 def get_movie(id: int = Path(ge=1, le=2000)) -> Movie:
-    for i in movies:
-        if i['id'] == id:
-            return JSONResponse(statuscode=200,content=i)
-    return ['No se encuentra su pelicula en la lista']
+    db = Session()
+    result = db.query(MovieModel).filter(MovieModel.id == id).first()
+    if not result:
+        return JSONResponse(status_code=404, content={'message': 'No encontrado'})
+    return JSONResponse(status_code=200, content=jsonable_encoder(result))
+
 
 @app.get('/movies/', tags=['movies'], response_model=List[Movie], status_code=200)
 def get_movies_by_category(category: str = Query(min_length=5, max_length=15)) -> Movie:
-    data = [ i for i in movies if i ['category'] == category]
-    return JSONResponse(statuscode=200,content=[data])
+    db = Session()
+    result = db.query(MovieModel).filter(MovieModel.category == category).first()
+    if not result:
+        return JSONResponse(status_code=404, content={'message': 'No encontrado'})
+    return JSONResponse(status_code=200,content=jsonable_encoder(result))
 
 @app.post('/movies', tags=['movies'], response_model=dict, status_code=201)
 def create_movie(movie: Movie) -> dict:
-    movies.append(movie)
+    db = Session()
+    new_movie = MovieModel(**movie.dict())
+    db.add(new_movie)
+    db.commit()
     return JSONResponse(status_code=201, content={"message": "Se registro la pelicula"})
 
 @app.put('/movies', tags=['movies'], response_model=dict, status_code=200)
