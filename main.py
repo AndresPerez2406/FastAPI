@@ -98,7 +98,7 @@ def get_movie(id: int = Path(ge=1, le=2000)) -> Movie:
 @app.get('/movies/', tags=['movies'], response_model=List[Movie], status_code=200)
 def get_movies_by_category(category: str = Query(min_length=5, max_length=15)) -> Movie:
     db = Session()
-    result = db.query(MovieModel).filter(MovieModel.category == category).first()
+    result = db.query(MovieModel).filter(MovieModel.category == category).all()
     if not result:
         return JSONResponse(status_code=404, content={'message': 'No encontrado'})
     return JSONResponse(status_code=200,content=jsonable_encoder(result))
@@ -111,26 +111,26 @@ def create_movie(movie: Movie) -> dict:
     db.commit()
     return JSONResponse(status_code=201, content={"message": "Se registro la pelicula"})
 
-@app.put('/movies', tags=['movies'], response_model=dict, status_code=200)
+@app.put('/movies/{id}', tags=['movies'], response_model=dict, status_code=200)
 def update_movie(id: int, movie: Movie) -> dict:
+    db = Session()
+    result = db.query(MovieModel).filter(MovieModel.id == id).first()
+    if not result:
+        return JSONResponse(status_code=404, content={'message': 'No encontrado'})
+    result.tittle = movie.tittle
+    result.overview = movie.overview
+    result.year = movie.year
+    result.rating = movie.rating
+    result.category = movie.category
+    db.commit()
+    return JSONResponse(status_code=200, content={'message': 'Se a modificado'})
 
-    movie = [(idx) for idx, mo in enumerate(movies) if mo['id'] == id]
-
-    if(len(movie) > 0):
-        movies[movie[-1]] = {
-            "id": id,
-            "title": movie.title,
-            "overview": movie.overview,
-            "year": movie.year,
-            "rating": movie.rating,
-            "category": movie.category
-        }
-        return JSONResponse(status_code=200, content={"message":'Se modifico la pelicula'})
-
-@app.delete('/movies', tags=['movies'], response_model=dict, status_code=200)
-def delete_movie(id: int = Body()) -> dict:
-    for i in movies:
-        if i['id'] == id:
-            movies.remove(i)
-            return JSONResponse(status_code=200, content={"message":'Se elimino la pelicula'})
-    return JSONResponse(status_code=404,content={"message":'No se encuentra ese id'})
+@app.delete('/movies/{id}', tags=['movies'], response_model=dict, status_code=200)
+def delete_movie(id: int) -> dict:
+    db = Session()
+    result = db.query(MovieModel).filter(MovieModel.id == id).first()
+    if not result:
+        return JSONResponse(status_code=404, content={'message': 'No encontrado'})
+    db.delete(result)
+    db.commit()
+    return JSONResponse(status_code=200,content={"message":'Se a eliminado correctamente'})
