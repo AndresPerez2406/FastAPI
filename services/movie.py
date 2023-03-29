@@ -16,7 +16,7 @@ class MovieService():
         return result
 
     def get_movies_by_category(self, category):
-        result = self.db.query(MovieModel).filter(MovieModel.category == category).first()
+        result = self.db.query(MovieModel).filter(MovieModel.category == category).all()
         return result
 
     def create_movie(self, movie: Movie):

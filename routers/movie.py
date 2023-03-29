@@ -15,7 +15,7 @@ movie_router = APIRouter()
 @movie_router.get('/movies', tags=['movies'], response_model= List[Movie], status_code=200, dependencies=[Depends(JWTBearer())])
 def get_movies() -> List[Movie]:
     db = Session()
-    result = MovieService(db).get_movies
+    result = MovieService(db).get_movies()
     return JSONResponse(status_code=200, content=jsonable_encoder(result))
 
 @movie_router.get('/movies/{id}', tags=['movies'], response_model=Movie, status_code=200)
@@ -30,7 +30,7 @@ def get_movie(id: int = Path(ge=1, le=2000)) -> Movie:
 @movie_router.get('/movies/', tags=['movies'], response_model=List[Movie], status_code=200)
 def get_movies_by_category(category: str = Query(min_length=5, max_length=15)) -> Movie:
     db = Session()
-    result = MovieService(db).get_movies_by_categoriy(category)
+    result = MovieService(db).get_movies_by_category(category)
     if not result:
         return JSONResponse(status_code=404, content={'message': 'No encontrado'})
     return JSONResponse(status_code=200,content=jsonable_encoder(result))
