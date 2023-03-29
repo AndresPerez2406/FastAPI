@@ -2,27 +2,19 @@ from typing import List, Optional
 from fastapi import Depends, FastAPI, Body, HTTPException, Path, Query, Request
 from fastapi.responses import HTMLResponse, JSONResponse
 from pydantic import BaseModel, Field
-from jwt_manager import create_token, validate_token
-from fastapi.security import HTTPBearer
 from config.database import Session, engine, Base
 from models.movie import Movie as MovieModel
 from fastapi.encoders import jsonable_encoder
+from middlewares.error_handler import ErrorHandler
+from middlewares.jwt_beater import JWTBearer
 
 app = FastAPI()
-
 app.title = "Mi aplicacion con FastAPI"
-
 app.version = '1.1.1.1'
 
+app.add_middleware(ErrorHandler)
+
 Base.metadata.create_all(bind= engine)
-
-class JWTBearer(HTTPBearer):
-    async def __call__(self, request: Request):
-        auth = await super().__call__(request)
-        data = validate_token(auth.credentials)
-        if data['email'] != 'admin@gmail.com':
-            raise HTTPException(status_code=404, detail='Credencial error')
-
 
 class User(BaseModel):
     email: str
@@ -84,7 +76,7 @@ def login(user: User):
 def get_movies() -> List[Movie]:
     db = Session()
     result = db.query(MovieModel).all()
-    return JSONResponse(status_code=200, content=jsonable_encoder(movies))
+    return JSONResponse(status_code=200, content=jsonable_encoder(result))
 
 @app.get('/movies/{id}', tags=['movies'], response_model=Movie, status_code=200)
 def get_movie(id: int = Path(ge=1, le=2000)) -> Movie:
