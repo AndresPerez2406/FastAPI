@@ -54,8 +54,8 @@ class Movie(BaseModel):
 movies = [
     {
         'id': 1,
-        'title': 'Avatar',
-        'overview': 'En un exuberante planeta llamado Pandora viven los Navi, seres que',
+        'title': 'Sherk',
+        'overview': 'Verde',
         'year': 2009,
         'rating': 7.8,
         'category': 'Comedia'
@@ -84,7 +84,7 @@ def login(user: User):
 def get_movies() -> List[Movie]:
     db = Session()
     result = db.query(MovieModel).all()
-    return JSONResponse(status_code=200, content=jsonable_encoder(result))
+    return JSONResponse(status_code=200, content=jsonable_encoder(movies))
 
 @app.get('/movies/{id}', tags=['movies'], response_model=Movie, status_code=200)
 def get_movie(id: int = Path(ge=1, le=2000)) -> Movie:
