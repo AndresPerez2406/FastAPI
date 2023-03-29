@@ -333,7 +333,7 @@ $RECYCLE.BIN/
 *.sqlite3
 *.db-shm
 *.db-wal
-*.sqlite
+*.sqlite3
 
 database.sqlite
 
